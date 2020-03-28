@@ -1,18 +1,119 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <TextView
+    <LinearLayout
+        android:id="@+id/score_field"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="50dp"
+        >
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Score: "
+            android:textSize="30sp"
+            />
+
+        <TextView
+            android:id="@+id/score"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="5"
+            android:textSize="30sp" />
+
+    </LinearLayout>
+
+    <GridLayout
+        android:id="@+id/buttons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/score_field"
+        android:columnCount="2"
+        android:rowCount="2"
+        android:layout_marginTop="80dp"
+        android:layout_centerHorizontal="true"
+        >
+
+        <ImageView
+            android:id="@+id/green_light"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_margin="10dp"
+            android:background="@color/colorGreen"
+            android:onClick="onClick"
+            android:layout_columnWeight="0"
+            android:layout_rowWeight="0"
+            />
+
+        <ImageView
+            android:id="@+id/red_light"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_margin="10dp"
+            android:background="@color/colorRed"
+            android:onClick="onClick"
+            android:layout_columnWeight="1"
+            android:layout_rowWeight="0"
+            />
+
+        <ImageView
+            android:id="@+id/yellow_light"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_margin="10dp"
+            android:background="@color/colorYellow"
+            android:onClick="onClick"
+            android:layout_columnWeight="0"
+            android:layout_rowWeight="1"
+            />
+
+        <ImageView
+            android:id="@+id/blue_light"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_margin="10dp"
+            android:background="@color/colorBlue"
+            android:onClick="onClick"
+            android:layout_columnWeight="1"
+            android:layout_rowWeight="1"
+            />
+
+    </GridLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/buttons"
+        android:layout_marginTop="30dp"
+        android:layout_centerHorizontal="true"
+        >
+
+        <Button
+            android:id="@+id/button_restart"
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+            android:text="Restart"
+            android:layout_marginRight="40dp"
+            android:layout_marginEnd="40dp"
+            android:onClick="restart"/>
+
+        <Button
+            android:id="@+id/button_sound_toggle"
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+            android:text="Sound On/Off"
+            android:onClick="toggleSound"/>
+
+
+
+    </LinearLayout>
+
+
+
+</RelativeLayout>
