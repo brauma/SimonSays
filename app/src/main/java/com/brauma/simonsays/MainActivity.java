@@ -2,36 +2,65 @@ package com.brauma.simonsays;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.SoundPool;
 import android.os.Bundle;
+import android.os.Vibrator;
+import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.nineoldandroids.animation.ArgbEvaluator;
+import com.nineoldandroids.animation.ObjectAnimator;
+import com.nineoldandroids.animation.ValueAnimator;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
-
+    // Views
     ImageView ivGreen, ivRed, ivYellow, ivBlue;
     TextView tvScore;
     Button btnRestart, btnSoundToggle;
 
+    // Sound Variables
+    float initVolume, volume;
+    int greenSound, redSound, yellowSound, blueSound;
+    SoundPool soundPool;
+
+    // Pattern Variables
     ArrayList<Integer> sequence;
-    int currentIndex, score;
+    int currentIndex, currentSequenceLength, score;
 
-    boolean sound;
+    // Thread
+    PlaybackThread playbackThread;
 
-    Random r;
+    // For feedback
+    Vibrator vibration;
+
+    Random random;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
         setContentView(R.layout.activity_main);
 
-        r = new Random(Calendar.getInstance().getTimeInMillis());
+        // Initializing and seeding the random number generator
+        random = new Random(Calendar.getInstance().getTimeInMillis());
 
+        // Hooks
         ivGreen = findViewById(R.id.green_light);
         ivRed = findViewById(R.id.red_light);
         ivYellow = findViewById(R.id.yellow_light);
@@ -41,51 +70,235 @@ public class MainActivity extends AppCompatActivity {
         btnRestart = findViewById(R.id.button_restart);
         btnSoundToggle = findViewById(R.id.button_sound_toggle);
 
+        // Initializing pattern variables
         sequence = new ArrayList<>();
         currentIndex = 0;
+        currentSequenceLength = 1;
         score = 0;
 
-        sound = true;
+        vibration = (Vibrator) this.getSystemService(VIBRATOR_SERVICE);
+
+        tvScore.setText(String.valueOf(score));
 
         initSequence();
+        initSounds();
+
+        playbackSequence();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        soundPool.release();
+    }
+
+    private void initSounds() {
+        soundPool = new SoundPool(5, AudioManager.STREAM_SYSTEM, 0);
+
+        greenSound = soundPool.load(this, R.raw.green, 1);
+        redSound = soundPool.load(this, R.raw.red, 1);
+        yellowSound = soundPool.load(this, R.raw.yellow, 1);
+        blueSound = soundPool.load(this, R.raw.blue, 1);
+
+        AudioManager mgr = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+
+        if (mgr != null) {
+            initVolume = mgr.getStreamVolume(AudioManager.STREAM_SYSTEM);
+            initVolume = initVolume / mgr.getStreamMaxVolume(AudioManager.STREAM_SYSTEM);
+        } else {
+            initVolume = 0.05f;
+        }
+
+        volume = initVolume;
 
     }
 
     private void initSequence() {
         sequence.clear();
-        for(int i = 0; i < 5; i++){
-            sequence.add(r.nextInt(4) + 1);
+        for(int i = 0; i < 100; i++){
+            sequence.add(random.nextInt(4) + 1);
         }
     }
 
-    private void appendSequence(){
-        for(int i = 0; i < 5; i++){
-            sequence.add(r.nextInt(4) + 1);
+    private void playbackSequence() {
+        playbackThread = new PlaybackThread(sequence, currentSequenceLength);
+        playbackThread.start();
+    }
+
+    private boolean play(int pressedButton){
+        if(sequence.get(currentIndex) == pressedButton){
+            if(currentIndex+1 != currentSequenceLength){
+                currentIndex++;
+            } else{
+                currentSequenceLength++;
+                score++;
+                tvScore.setText(String.valueOf(score));
+                currentIndex = 0;
+                playbackSequence();
+            }
+            return true;
+        } else {
+            vibration.vibrate(100);
+            restart();
+            return false;
         }
     }
 
+    private void activateButton(int buttonId) {
+        switch(buttonId){
+            case 1:
+                highlightGreen();
+                break;
+            case 2:
+                highlightRed();
+                break;
+            case 3:
+                highlightYellow();
+                break;
+            case 4:
+                highlightBlue();
+                break;
+        }
+    }
 
     public void onClick(View view) {
         switch(view.getId()){
             case R.id.green_light:
-
+                if(play(1))
+                    highlightGreen();
                 break;
             case R.id.red_light:
-
+                if(play(2))
+                    highlightRed();
                 break;
             case R.id.yellow_light:
-
+                if(play(3))
+                    highlightYellow();
                 break;
             case R.id.blue_light:
-
+                if(play(4))
+                    highlightBlue();
                 break;
         }
     }
 
-    public void restart(View view) {
+    private void highlightGreen(){
+        ValueAnimator colorAnim = ObjectAnimator.ofInt(ivGreen, "backgroundColor",
+                getResources().getColor(R.color.colorGreen), getResources().getColor(R.color.colorWhite));
+        colorAnim.setDuration(250);
+        colorAnim.setEvaluator(new ArgbEvaluator());
+        colorAnim.setRepeatCount(1);
+        colorAnim.setRepeatMode(ValueAnimator.REVERSE);
+        colorAnim.start();
+
+        soundPool.play(greenSound, volume, volume,0,0,1);
+    }
+
+    private void highlightRed(){
+        ValueAnimator colorAnim = ObjectAnimator.ofInt(ivRed, "backgroundColor",
+                getResources().getColor(R.color.colorRed), getResources().getColor(R.color.colorWhite));
+        colorAnim.setDuration(250);
+        colorAnim.setEvaluator(new ArgbEvaluator());
+        colorAnim.setRepeatCount(1);
+        colorAnim.setRepeatMode(ValueAnimator.REVERSE);
+        colorAnim.start();
+
+        soundPool.play(redSound, volume, volume,0,0,1);
+    }
+
+    private void highlightYellow(){
+        ValueAnimator colorAnim = ObjectAnimator.ofInt(ivYellow, "backgroundColor",
+                getResources().getColor(R.color.colorYellow), getResources().getColor(R.color.colorWhite));
+        colorAnim.setDuration(250);
+        colorAnim.setEvaluator(new ArgbEvaluator());
+        colorAnim.setRepeatCount(1);
+        colorAnim.setRepeatMode(ValueAnimator.REVERSE);
+        colorAnim.start();
+
+        soundPool.play(yellowSound, volume, volume,0,0,1);
+    }
+
+    private void highlightBlue(){
+        ValueAnimator colorAnim = ObjectAnimator.ofInt(ivBlue, "backgroundColor",
+                getResources().getColor(R.color.colorBlue), getResources().getColor(R.color.colorWhite));
+        colorAnim.setDuration(250);
+        colorAnim.setEvaluator(new ArgbEvaluator());
+        colorAnim.setRepeatCount(1);
+        colorAnim.setRepeatMode(ValueAnimator.REVERSE);
+        colorAnim.start();
+
+        soundPool.play(blueSound, volume, volume,0,0,1);
+    }
+
+    public void restart() {
+        score = 0;
+        currentIndex = 0;
+        currentSequenceLength = 1;
+        initSequence();
+        tvScore.setText(String.valueOf(score));
+        playbackThread.interrupt();
+        playbackSequence();
+    }
+
+    public void restartClick(View view) {
+        restart();
+        vibration.vibrate(50);
     }
 
     public void toggleSound(View view) {
-        sound = !sound;
+        if(volume == 0) {
+            volume = initVolume;
+        } else {
+            volume = 0;
+        }
+        vibration.vibrate(50);
     }
+
+    public class PlaybackThread extends Thread {
+
+        private static final String TAG = "PlaybackThread";
+        private static final int DELAY = 1000; // a second
+
+        private ArrayList<Integer> sequence;
+        private int currentSequenceLength;
+        private int i;
+
+        PlaybackThread(ArrayList<Integer> sequence, int currentSequenceLength){
+            this.sequence = sequence;
+            this.currentSequenceLength = currentSequenceLength;
+            i = 0;
+        }
+
+        @Override
+        public void run() {
+            Log.v(TAG, "doing work in Playback Thread");
+            while (i < currentSequenceLength) {
+                if(Thread.interrupted()){
+                    break;
+                }
+                try {
+                    Thread.sleep(DELAY);
+                } catch (InterruptedException e) {
+                    Log.e(TAG,
+                            "Playback Thread interrupted");
+                    return;
+                }
+                progress(sequence.get(i));
+                i++;
+            }
+        }
+
+        private void progress(final int index) {
+            Log.v(TAG, "calling ImageView functions from Playback Thread");
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    activateButton(index);
+                }
+            });
+        }
+    }
+
 }

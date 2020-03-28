@@ -3,7 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity"
+    android:background="@android:color/black">
 
     <LinearLayout
         android:id="@+id/score_field"
@@ -18,6 +19,7 @@
             android:layout_height="wrap_content"
             android:text="Score: "
             android:textSize="30sp"
+            android:textColor="@android:color/white"
             />
 
         <TextView
@@ -25,7 +27,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="5"
-            android:textSize="30sp" />
+            android:textSize="30sp"
+            android:textColor="@android:color/white"
+            />
 
     </LinearLayout>
 
@@ -36,7 +40,7 @@
         android:layout_below="@id/score_field"
         android:columnCount="2"
         android:rowCount="2"
-        android:layout_marginTop="80dp"
+        android:layout_marginTop="30dp"
         android:layout_centerHorizontal="true"
         >
 
@@ -101,7 +105,7 @@
             android:text="Restart"
             android:layout_marginRight="40dp"
             android:layout_marginEnd="40dp"
-            android:onClick="restart"/>
+            android:onClick="restartClick"/>
 
         <Button
             android:id="@+id/button_sound_toggle"
