@@ -8,8 +8,4 @@
     <color name="colorYellow">#FEF224</color>
     <color name="colorBlue">#01A5E2</color>
     <color name="colorWhite">#FFFFFF</color>
-    <color name="colorHighlightGreen">#c8f2cd</color>
-    <color name="colorHighlightRed">#fdd6d1</color>
-    <color name="colorHighlightYellow">#fffccc</color>
-    <color name="colorHighlightBlue">#cff0ff</color>
 </resources>

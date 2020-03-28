@@ -1,11 +1,15 @@
 package com.brauma.simonsays;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.SoundPool;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.util.Log;
@@ -13,6 +17,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -28,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     // Views
     ImageView ivGreen, ivRed, ivYellow, ivBlue;
     TextView tvScore;
-    Button btnRestart, btnSoundToggle;
+    ImageView btnRestart, btnSoundToggle;
 
     // Sound Variables
     float initVolume, volume;
@@ -45,12 +50,14 @@ public class MainActivity extends AppCompatActivity {
     // For feedback
     Vibrator vibration;
 
+    // Random number generator
     Random random;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Make it full screen
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -60,29 +67,27 @@ public class MainActivity extends AppCompatActivity {
         // Initializing and seeding the random number generator
         random = new Random(Calendar.getInstance().getTimeInMillis());
 
-        // Hooks
-        ivGreen = findViewById(R.id.green_light);
-        ivRed = findViewById(R.id.red_light);
-        ivYellow = findViewById(R.id.yellow_light);
-        ivBlue = findViewById(R.id.blue_light);
-
-        tvScore = findViewById(R.id.score);
-        btnRestart = findViewById(R.id.button_restart);
-        btnSoundToggle = findViewById(R.id.button_sound_toggle);
-
-        // Initializing pattern variables
+        // Initializing variables
         sequence = new ArrayList<>();
         currentIndex = 0;
         currentSequenceLength = 1;
         score = 0;
 
-        vibration = (Vibrator) this.getSystemService(VIBRATOR_SERVICE);
-
-        tvScore.setText(String.valueOf(score));
-
+        // Initializing
+        initViews();
         initSequence();
         initSounds();
 
+        vibration = (Vibrator) this.getSystemService(VIBRATOR_SERVICE);
+
+        // Setting initial score
+        tvScore.setText(String.valueOf(score));
+
+        // Setting icons for the buttons
+        btnRestart.setImageResource(R.drawable.ic_reload);
+        btnSoundToggle.setImageResource(R.drawable.ic_mute);
+
+        // Play the first part of the first sequence
         playbackSequence();
     }
 
@@ -93,14 +98,27 @@ public class MainActivity extends AppCompatActivity {
         soundPool.release();
     }
 
+    private void initViews() {
+        ivGreen = findViewById(R.id.green_light);
+        ivRed = findViewById(R.id.red_light);
+        ivYellow = findViewById(R.id.yellow_light);
+        ivBlue = findViewById(R.id.blue_light);
+
+        tvScore = findViewById(R.id.score);
+        btnRestart = findViewById(R.id.button_restart);
+        btnSoundToggle = findViewById(R.id.toggleButton);
+    }
+
     private void initSounds() {
         soundPool = new SoundPool(5, AudioManager.STREAM_SYSTEM, 0);
 
+        // IDs for the sounds
         greenSound = soundPool.load(this, R.raw.green, 1);
         redSound = soundPool.load(this, R.raw.red, 1);
         yellowSound = soundPool.load(this, R.raw.yellow, 1);
         blueSound = soundPool.load(this, R.raw.blue, 1);
 
+        // This is for trying to set the volume to the system volume
         AudioManager mgr = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
 
         if (mgr != null) {
@@ -122,15 +140,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void playbackSequence() {
+        // Starting new thread for the playback, so the Thread.sleep() function doesn't freeze the UI thread
         playbackThread = new PlaybackThread(sequence, currentSequenceLength);
         playbackThread.start();
     }
 
     private boolean play(int pressedButton){
+        // Check if it was the correct button to press
         if(sequence.get(currentIndex) == pressedButton){
+            // If not at the end of the current sequence part, increment the index variable
             if(currentIndex+1 != currentSequenceLength){
                 currentIndex++;
-            } else{
+            }
+            // If at the end, increment score and the length of the sequence part. Then play back the new, longer sequence
+            else{
                 currentSequenceLength++;
                 score++;
                 tvScore.setText(String.valueOf(score));
@@ -138,7 +161,9 @@ public class MainActivity extends AppCompatActivity {
                 playbackSequence();
             }
             return true;
-        } else {
+        }
+        // If not, vibrate, then restart the game
+        else {
             vibration.vibrate(100);
             restart();
             return false;
@@ -146,6 +171,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void activateButton(int buttonId) {
+        // Play the button specific effects
         switch(buttonId){
             case 1:
                 highlightGreen();
@@ -232,12 +258,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void restart() {
+        playbackThread.interrupt();
+        initSequence();
         score = 0;
         currentIndex = 0;
         currentSequenceLength = 1;
-        initSequence();
         tvScore.setText(String.valueOf(score));
-        playbackThread.interrupt();
         playbackSequence();
     }
 
@@ -249,12 +275,15 @@ public class MainActivity extends AppCompatActivity {
     public void toggleSound(View view) {
         if(volume == 0) {
             volume = initVolume;
+            btnSoundToggle.setImageResource(R.drawable.ic_mute);
         } else {
             volume = 0;
+            btnSoundToggle.setImageResource(R.drawable.ic_volume);
         }
         vibration.vibrate(50);
     }
 
+    // Thread for playing back the sequence
     public class PlaybackThread extends Thread {
 
         private static final String TAG = "PlaybackThread";
