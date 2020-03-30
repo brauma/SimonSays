@@ -4,6 +4,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
@@ -13,6 +14,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -53,6 +55,8 @@ public class MainActivity extends AppCompatActivity {
     // Random number generator
     Random random;
 
+    AudioManager mgr;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
         initSequence();
         initSounds();
 
+        // For feedback
         vibration = (Vibrator) this.getSystemService(VIBRATOR_SERVICE);
 
         // Setting initial score
@@ -94,8 +99,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-
         soundPool.release();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        playbackThread.interrupt();
     }
 
     private void initViews() {
@@ -112,14 +122,14 @@ public class MainActivity extends AppCompatActivity {
     private void initSounds() {
         soundPool = new SoundPool(5, AudioManager.STREAM_SYSTEM, 0);
 
-        // IDs for the sounds
+        // IDs and loading for the sounds
         greenSound = soundPool.load(this, R.raw.green, 1);
         redSound = soundPool.load(this, R.raw.red, 1);
         yellowSound = soundPool.load(this, R.raw.yellow, 1);
         blueSound = soundPool.load(this, R.raw.blue, 1);
 
         // This is for trying to set the volume to the system volume
-        AudioManager mgr = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+        mgr = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
 
         if (mgr != null) {
             initVolume = mgr.getStreamVolume(AudioManager.STREAM_SYSTEM);
@@ -129,7 +139,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         volume = initVolume;
-
     }
 
     private void initSequence() {
@@ -164,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
         }
         // If not, vibrate, then restart the game
         else {
-            vibration.vibrate(100);
+            vibration.vibrate(200);
             restart();
             return false;
         }
@@ -207,6 +216,20 @@ public class MainActivity extends AppCompatActivity {
                     highlightBlue();
                 break;
         }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == KeyEvent.KEYCODE_VOLUME_UP)
+        {
+            if (mgr != null) {
+                initVolume = mgr.getStreamVolume(AudioManager.STREAM_SYSTEM);
+                initVolume = initVolume / mgr.getStreamMaxVolume(AudioManager.STREAM_SYSTEM);
+            }
+
+            volume = initVolume;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
     private void highlightGreen(){
@@ -269,7 +292,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void restartClick(View view) {
         restart();
-        vibration.vibrate(50);
+        vibration.vibrate(100);
     }
 
     public void toggleSound(View view) {
@@ -309,8 +332,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     Thread.sleep(DELAY);
                 } catch (InterruptedException e) {
-                    Log.e(TAG,
-                            "Playback Thread interrupted");
+                    Log.e(TAG, "Playback Thread interrupted");
                     return;
                 }
                 progress(sequence.get(i));
