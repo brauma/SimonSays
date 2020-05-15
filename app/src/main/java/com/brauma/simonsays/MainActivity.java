@@ -52,25 +52,32 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Initializing and seeding the random number generator
+        random = new Random(Calendar.getInstance().getTimeInMillis());
+
+        if (savedInstanceState != null) {
+            this.currentIndex = savedInstanceState.getInt("CURRENTINDEX");
+            this.currentSequenceLength = savedInstanceState.getInt("CURRENTSEQUENCELENGTH");
+            this.score = savedInstanceState.getInt("SCORE");
+            this.sequence = savedInstanceState.getIntegerArrayList("SEQUENCE");
+        } else {
+            // Initializing variables
+            sequence = new ArrayList<>();
+            currentIndex = 0;
+            currentSequenceLength = 1;
+            score = 0;
+            initSequence();
+        }
+
         // Make it full screen
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         setContentView(R.layout.activity_main);
-
-        // Initializing and seeding the random number generator
-        random = new Random(Calendar.getInstance().getTimeInMillis());
-
-        // Initializing variables
-        sequence = new ArrayList<>();
-        currentIndex = 0;
-        currentSequenceLength = 1;
-        score = 0;
-
+        
         // Some more initializing
         initViews();
-        initSequence();
         initSounds();
 
         // For feedback
@@ -85,6 +92,17 @@ public class MainActivity extends AppCompatActivity {
 
         // Play the first part of the first sequence
         playbackSequence();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putInt("CURRENTINDEX", this.currentIndex);
+        outState.putInt("CURRENTSEQUENCELENGTH", this.currentSequenceLength);
+        outState.putInt("SCORE", this.score);
+        outState.putIntegerArrayList("SEQUENCE", this.sequence);
+
+        // Call superclass to save any view hierarchy
+        super.onSaveInstanceState(outState);
     }
 
     @Override
