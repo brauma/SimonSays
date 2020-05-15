@@ -1,16 +1,10 @@
 package com.brauma.simonsays;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
-import android.content.pm.ActivityInfo;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.media.SoundPool;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.util.Log;
@@ -18,14 +12,11 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import com.nineoldandroids.animation.ArgbEvaluator;
-import com.nineoldandroids.animation.ObjectAnimator;
-import com.nineoldandroids.animation.ValueAnimator;
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -77,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
         currentSequenceLength = 1;
         score = 0;
 
-        // Initializing
+        // Some more initializing
         initViews();
         initSequence();
         initSounds();
@@ -120,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initSounds() {
-        soundPool = new SoundPool(5, AudioManager.STREAM_SYSTEM, 0);
+        soundPool = new SoundPool(4, AudioManager.STREAM_SYSTEM, 0);
 
         // IDs and loading for the sounds
         greenSound = soundPool.load(this, R.raw.green, 1);
